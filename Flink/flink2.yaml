@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-jobmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flink
+      component: jobmanager
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: jobmanager
+    spec:
+      containers:
+      - name: jobmanager
+        image: learningdocker2023/pyflink:1.18.1
+        args: ["jobmanager"]
+        ports:
+        - containerPort: 8081
+        - containerPort: 6123
+        - containerPort: 6124
+        env:
+        - name: FLINK_PROPERTIES
+          value: |
+            jobmanager.rpc.address: flink-jobmanager
+            jobmanager.rpc.port: 6123
+            jobmanager.bind-host: 0.0.0.0
+            blob.server.address: 0.0.0.0
+            blob.server.port: 6124
+            rest.bind-address: 0.0.0.0
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flink-jobmanager
+spec:
+  ports:
+  - name: ui
+    port: 8081
+  - name: rpc
+    port: 6123
+  - name: blob
+    port: 6124
+  selector:
+    app: flink
+    component: jobmanager
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flink-taskmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flink
+      component: taskmanager
+  template:
+    metadata:
+      labels:
+        app: flink
+        component: taskmanager
+    spec:
+      containers:
+      - name: taskmanager
+        image: learningdocker2023/pyflink:1.18.1
+        args: ["taskmanager"]
+        env:
+        - name: FLINK_PROPERTIES
+          value: |
+            jobmanager.rpc.address: flink-jobmanager
+            jobmanager.rpc.port: 6123
+            taskmanager.bind-host: 0.0.0.0
+            taskmanager.numberOfTaskSlots: 5
+
+

@@ -1,0 +1,16 @@
+kubectl create namespace flink
+kubectl config set-context --current --namespace=flink
+
+#Build docker and push you flink image to ECR/Dockerhub
+docker build -t pyflink:1.18.1
+docker tag pyflink:1.18.1 <docker-hub-username>/pyflink:1.18.1
+
+kubectl apply -f flink2.yaml #wait for flink pods to come up task manager and job manager
+
+then deploy the job
+cd pyflink
+./deploy.sh
+
+
+
+

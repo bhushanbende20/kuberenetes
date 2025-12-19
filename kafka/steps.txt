@@ -1,0 +1,2 @@
+kubectl create namespace kafka
+kubectl apply -n kafka -f https://strimzi.io/install/latest?namespace=kafka

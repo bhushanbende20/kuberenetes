@@ -1,0 +1,11 @@
+apiVersion: flink.apache.org/v1beta1
+kind: FlinkApplication
+metadata:
+  name: pyflink-wordcount
+spec:
+  image: learningfeb2023/pyflink-job:1.0
+  flinkVersion: v1_18
+  mode: application
+  job:
+    jarFile: /opt/flink/word_count.py
+    parallelism: 2
