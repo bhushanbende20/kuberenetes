@@ -1,0 +1,39 @@
+fission function update \
+  --name world-py \
+  --code world.py \
+  --executortype newdeploy \
+  --minscale 0 \
+  --maxscale 10 \
+  --targetcpu 50 \
+  --idletimeout 30 \
+  --namespace default
+
+
+
+fission function update \
+  --name world-py \
+  --code world.py \
+  --executortype poolmgr \
+  --env world \
+  --namespace default \
+  --yolo true
+
+
+
+
+
+
+
+
+fission fn crupdateeate --name my-function --env world --src my-function.zip --entrypoint "function.main"        
+
+fission function update \
+  --name my-function \
+  --src my-function.zip \
+  --entrypoint "function.main" \
+  --executortype poolmgr \
+  --env world \
+  --idletimeout 30 \
+  --namespace default \
+  --rpp 50 \
+  --con 20

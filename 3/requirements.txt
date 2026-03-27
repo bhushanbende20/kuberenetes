@@ -1,0 +1,6 @@
+requests==2.28.1
+pyyaml==6.0.2  # Try newer version first
+# OR use pure Python alternative:
+pyyaml-include==2.1
+# OR even better, use ruamel.yaml (pure Python)
+ruamel.yaml==0.18.6

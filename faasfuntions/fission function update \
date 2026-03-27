@@ -1,0 +1,11 @@
+fission function update \
+  --name hello-py \
+  --code hello.py \
+  --executortype newdeploy \
+  --minscale 0 \
+  --maxscale 10 \
+  --mincpu 50 \
+  --maxcpu 200 \
+  --minmemory 128 \
+  --maxmemory 512 \
+  -n default
