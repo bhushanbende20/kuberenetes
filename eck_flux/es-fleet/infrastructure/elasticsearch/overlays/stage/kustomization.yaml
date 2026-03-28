@@ -1,0 +1,41 @@
+---
+# Stage overlay — medium-sized, mirrors prod topology but smaller nodes.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - es-cluster-stage.yaml     # second cluster (e.g. search vs logs)
+  # - es-cluster-stage-logs.yaml
+
+namespace: elasticsearch-stage
+
+commonLabels:
+  env: stage
+
+patches:
+  - target:
+      kind: Elasticsearch
+      name: es-cluster
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: es-cluster-stage
+      - op: replace
+        path: /spec/version
+        value: "8.13.4"
+      - op: replace
+        path: /spec/nodeSets/0/count
+        value: 2
+      - op: replace
+        path: /spec/nodeSets/0/volumeClaimTemplates/0/spec/resources/requests/storage
+        value: 20Gi
+      - op: replace
+        path: /spec/nodeSets/0/podTemplate/spec/containers/0/resources/requests/memory
+        value: 1Gi
+      - op: replace
+        path: /spec/nodeSets/0/podTemplate/spec/containers/0/resources/limits/memory
+        value: 2Gi
+      - op: replace
+        path: /spec/nodeSets/0/podTemplate/spec/containers/0/env/0/value
+        value: "-Xms1g -Xmx1g"

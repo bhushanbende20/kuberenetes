@@ -1,0 +1,54 @@
+---
+# Second ES cluster in stage — e.g. dedicated logging cluster.
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: es-cluster-stage
+  namespace: elasticsearch-stage
+  labels:
+    env: stage
+    cluster-role: logs
+spec:
+  version: "8.13.4"
+  nodeSets:
+    - name: default
+      count: 2
+      config:
+        node.roles: ["master", "data", "ingest"]
+        xpack.security.enabled: true
+        xpack.security.http.ssl.enabled: true
+        xpack.security.transport.ssl.enabled: true
+      podTemplate:
+        spec:
+          initContainers:
+            - name: sysctl
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              command: ["sh", "-c", "sysctl -w vm.max_map_count=262144"]
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  memory: 1Gi
+                  cpu: 500m
+                limits:
+                  memory: 2Gi
+                  cpu: "2"
+              env:
+                - name: ES_JAVA_OPTS
+                  value: "-Xms1g -Xmx1g"
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 50Gi
+            storageClassName: standard
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: false

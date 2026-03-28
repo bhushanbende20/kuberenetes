@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: elasticsearch
+  labels:
+    app.kubernetes.io/managed-by: flux

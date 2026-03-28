@@ -1,0 +1,45 @@
+---
+# Flux Kustomization for ECK Operator — must be applied before ES clusters.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: eck-operator
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./infrastructure/eck-operator
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: elastic-operator
+      namespace: elastic-system
+  timeout: 5m
+---
+# Flux Kustomization for dev ES clusters — depends on ECK operator being healthy.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: elasticsearch-dev
+  namespace: flux-system
+spec:
+  interval: 5m
+  path: ./infrastructure/elasticsearch/overlays/dev
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: eck-operator
+  healthChecks:
+    - apiVersion: elasticsearch.k8s.elastic.co/v1
+      kind: Elasticsearch
+      name: es-cluster-dev
+      namespace: elasticsearch-dev
+  timeout: 10m
+  # Substitute env-specific variables if needed (requires --with-replace-vars flag)
+  postBuild:
+    substituteFrom: []

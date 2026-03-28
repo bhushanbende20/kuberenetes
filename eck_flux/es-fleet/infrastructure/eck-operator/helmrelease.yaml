@@ -1,0 +1,38 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: eck-operator
+  namespace: elastic-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: eck-operator
+      version: "2.13.*"          # pin minor, float patch
+      sourceRef:
+        kind: HelmRepository
+        name: elastic
+        namespace: flux-system
+      interval: 1h
+  install:
+    crds: Create
+    createNamespace: true
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  values:
+    # Run the operator only in elastic-system namespace for security
+    managedNamespaces: []        # empty = watch all namespaces
+    replicaCount: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 150Mi
+    # Telemetry off in air-gapped / corp envs
+    telemetry:
+      disabled: false

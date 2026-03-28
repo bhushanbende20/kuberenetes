@@ -1,0 +1,59 @@
+---
+# Base Elasticsearch cluster — rendered by Kustomize overlays.
+# ECK operator watches this CRD and provisions the StatefulSet / Services.
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: es-cluster           # overridden per-instance in overlays
+  namespace: elasticsearch   # overridden per-env in overlays
+spec:
+  version: 8.13.4            # overridden in overlays to pin per-env
+
+  # ── Node sets ──────────────────────────────────────────────────────────────
+  # Single combined node-set in base; overlays split into master/data/ingest
+  # for prod or keep combined for dev/stage.
+  nodeSets:
+    - name: default
+      count: 1               # overridden in overlay
+      config:
+        # JVM heap = 50 % of container memory limit (ECK default)
+        node.roles: ["master", "data", "ingest"]
+        xpack.security.enabled: true
+        xpack.security.http.ssl.enabled: true
+        xpack.security.transport.ssl.enabled: true
+      podTemplate:
+        spec:
+          initContainers:
+            - name: sysctl
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              command: ["sh", "-c", "sysctl -w vm.max_map_count=262144"]
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  memory: 1Gi
+                  cpu: 500m
+                limits:
+                  memory: 2Gi
+                  cpu: "1"
+              env:
+                - name: ES_JAVA_OPTS
+                  value: "-Xms512m -Xmx512m"
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 10Gi
+            # storageClassName: overridden in overlay
+
+  # ── HTTP settings ───────────────────────────────────────────────────────────
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: false       # set true if you bring your own cert

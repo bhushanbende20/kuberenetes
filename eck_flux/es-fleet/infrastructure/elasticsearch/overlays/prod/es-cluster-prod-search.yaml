@@ -1,0 +1,89 @@
+---
+# Second ES cluster in prod — dedicated search cluster (separate from primary).
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: es-cluster-prod-search
+  namespace: elasticsearch-prod
+  labels:
+    env: prod
+    cluster-role: search
+spec:
+  version: "8.13.4"
+  nodeSets:
+    - name: master
+      count: 3
+      config:
+        node.roles: ["master"]
+        xpack.security.enabled: true
+        xpack.security.http.ssl.enabled: true
+        xpack.security.transport.ssl.enabled: true
+      podTemplate:
+        spec:
+          initContainers:
+            - name: sysctl
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              command: ["sh", "-c", "sysctl -w vm.max_map_count=262144"]
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  memory: 2Gi
+                  cpu: 500m
+                limits:
+                  memory: 4Gi
+                  cpu: "2"
+              env:
+                - name: ES_JAVA_OPTS
+                  value: "-Xms2g -Xmx2g"
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes: [ReadWriteOnce]
+            resources:
+              requests:
+                storage: 10Gi
+            storageClassName: fast-ssd
+    - name: data
+      count: 5
+      config:
+        node.roles: ["data", "data_content", "data_hot"]
+        xpack.security.enabled: true
+        xpack.security.http.ssl.enabled: true
+        xpack.security.transport.ssl.enabled: true
+      podTemplate:
+        spec:
+          initContainers:
+            - name: sysctl
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              command: ["sh", "-c", "sysctl -w vm.max_map_count=262144"]
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  memory: 16Gi
+                  cpu: "4"
+                limits:
+                  memory: 32Gi
+                  cpu: "8"
+              env:
+                - name: ES_JAVA_OPTS
+                  value: "-Xms16g -Xmx16g"
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes: [ReadWriteOnce]
+            resources:
+              requests:
+                storage: 1Ti
+            storageClassName: fast-ssd
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: false

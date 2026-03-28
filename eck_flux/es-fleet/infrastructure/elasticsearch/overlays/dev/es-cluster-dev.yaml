@@ -1,0 +1,55 @@
+---
+# Second Elasticsearch cluster in dev — e.g. for a separate app / logging stack.
+# This is a standalone ECK Elasticsearch resource; it does NOT inherit from base.
+# Tune it independently.
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: es-cluster-dev          # unique name in this overlay
+  namespace: elasticsearch-dev
+  labels:
+    env: dev
+    cluster-role: app            # tag to differentiate clusters
+spec:
+  version: "8.13.4"
+  nodeSets:
+    - name: default
+      count: 1
+      config:
+        node.roles: ["master", "data", "ingest"]
+        xpack.security.enabled: true
+        xpack.security.http.ssl.enabled: true
+        xpack.security.transport.ssl.enabled: true
+      podTemplate:
+        spec:
+          initContainers:
+            - name: sysctl
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              command: ["sh", "-c", "sysctl -w vm.max_map_count=262144"]
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  memory: 512Mi
+                  cpu: 250m
+                limits:
+                  memory: 1Gi
+                  cpu: "1"
+              env:
+                - name: ES_JAVA_OPTS
+                  value: "-Xms256m -Xmx256m"
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 5Gi
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: false
