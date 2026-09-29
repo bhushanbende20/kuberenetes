@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Langdock Ollama Qwen Portal</title>
-  <meta name="description" content="Production-ready bridge and interactive chat connecting Langdock with local Ollama Qwen models.">
+  <title>Bhushan's LLM • Interactive Chat & Langdock</title>
+  <meta name="description" content="Bhushan's LLM: Production-ready bridge and interactive chat connecting Langdock with local Ollama Qwen models.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -21,8 +21,8 @@
           </svg>
         </div>
         <div class="brand-text">
-          <h2>Langdock <span class="badge-accent">Bridge</span></h2>
-          <span class="sub-text">Ollama &bull; Qwen 3.5</span>
+          <h2>Bhushan's <span class="badge-accent">LLM</span></h2>
+          <span class="sub-text">Powered by Ollama &bull; Langdock</span>
         </div>
       </div>
 
@@ -69,10 +69,8 @@
         <input type="range" min="0" max="1" step="0.05" value="0.7" class="custom-slider" id="tempSlider">
       </div>
 
-      <div class="sidebar-section">
-        <label class="control-label" for="systemPrompt">System Persona</label>
-        <textarea class="custom-textarea" id="systemPrompt" rows="3" placeholder="You are a helpful, precise AI assistant powered by Qwen."></textarea>
-      </div>
+      <!-- System prompt is applied server-side automatically -->
+      <textarea id="systemPrompt" style="display:none;">You are Bhushan's LLM, an advanced, highly intelligent AI assistant created for and operated by Bhushan. Always identify yourself as Bhushan's LLM. When asked who you are, what model you are, or who made you, always state clearly that you are Bhushan's LLM.</textarea>
 
       <div class="sidebar-footer">
         <button class="btn btn-secondary btn-full" id="clearChatBtn">
@@ -91,8 +89,8 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
           <div class="topbar-title">
-            <h1 id="pageTitle">Qwen 3.5 Interactive Chat</h1>
-            <span class="topbar-meta">Bridge streaming directly from <code>http://localhost:11434/api/chat</code></span>
+            <h1 id="pageTitle">Bhushan's LLM</h1>
+            <span class="topbar-meta">Streaming from <code>http://localhost:11434/api/chat</code></span>
           </div>
         </div>
         <div class="topbar-actions">
@@ -105,26 +103,27 @@
         <div class="chat-container" id="chatContainer">
           <!-- Welcome Message -->
           <div class="welcome-card" id="welcomeCard">
-            <div class="welcome-icon">⚡</div>
-            <h3>Ready to interact with Qwen 3.5</h3>
-            <p>This application routes requests to your local Ollama instance at <code>http://localhost:11434/api/chat</code> with full support for reasoning traces and real-time streaming.</p>
+            <div class="welcome-icon">👑</div>
+            <h3>Ready to chat with Bhushan's LLM</h3>
+            <p>I am <strong>Bhushan's LLM</strong>, powered by local Qwen with reasoning traces and real-time streaming. Ask me anything below!</p>
             <div class="quick-prompts">
+              <button class="quick-prompt-btn" data-prompt="Who are you?">Who are you?</button>
+              <button class="quick-prompt-btn" data-prompt="What can you do as Bhushan's LLM?">What can you do?</button>
               <button class="quick-prompt-btn" data-prompt="What are the key architectural benefits of running Apache Flink on Kubernetes using the Operator?">Architecture of Flink on K8s</button>
               <button class="quick-prompt-btn" data-prompt="Write a Python script that streams responses from Ollama API chat endpoint.">Python Ollama streaming script</button>
-              <button class="quick-prompt-btn" data-prompt="Explain how Langdock integrates with custom local models via OpenAI compatible endpoints.">Langdock custom model setup</button>
             </div>
           </div>
           <!-- Chat messages dynamically rendered here -->
         </div>
 
-        <!-- Chat Input Bar -->
+        <!-- Chat Input Bar (Always Pinned at Bottom) -->
         <div class="input-panel">
           <form class="chat-form" id="chatForm">
             <div class="input-wrapper">
               <textarea 
                 id="messageInput" 
                 class="chat-input" 
-                placeholder="Ask Qwen anything... (Shift+Enter for newline, Enter to send)" 
+                placeholder="Message Bhushan's LLM... (Shift+Enter for newline, Enter to send)" 
                 rows="1"
                 autofocus
               ></textarea>
@@ -134,7 +133,7 @@
             </div>
           </form>
           <div class="input-meta">
-            <span>Powered by <strong>Qwen 3.5 (Ollama)</strong> &bull; Endpoint: <code>/api/chat</code></span>
+            <span>Endpoint: <code>/api/chat</code></span>
             <span id="speedMetric"></span>
           </div>
         </div>

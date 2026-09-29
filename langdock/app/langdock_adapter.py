@@ -3,15 +3,38 @@ import time
 import uuid
 from typing import Dict, Any, List, AsyncGenerator, Tuple, Optional
 
+from .config import settings
+
 def convert_langdock_request_to_ollama(payload: Dict[str, Any], default_model: str) -> Tuple[str, List[Dict[str, Any]], Dict[str, Any], bool]:
     """
     Translates an incoming Langdock (OpenAI-compatible) chat completion request
-    into Ollama /api/chat parameters.
+    into Ollama /api/chat parameters, ensuring Bhushan's LLM master prompt is applied.
     """
     model = payload.get("model") or default_model
-    messages = payload.get("messages", [])
+    incoming_messages = payload.get("messages", [])
     stream = payload.get("stream", False)
     
+    # Enforce Bhushan's LLM master prompt
+    has_system = False
+    messages: List[Dict[str, Any]] = []
+    for m in incoming_messages:
+        if m.get("role") == "system":
+            has_system = True
+            content = m.get("content", "")
+            # Prepend master prompt so identity is always preserved
+            messages.append({
+                "role": "system",
+                "content": f"{settings.master_system_prompt}\n\nContext: {content}" if content else settings.master_system_prompt
+            })
+        else:
+            messages.append(m)
+
+    if not has_system:
+        messages.insert(0, {
+            "role": "system",
+            "content": settings.master_system_prompt
+        })
+
     options: Dict[str, Any] = {}
     if "temperature" in payload and payload["temperature"] is not None:
         options["temperature"] = float(payload["temperature"])

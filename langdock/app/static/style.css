@@ -298,10 +298,12 @@ body {
   height: 100vh;
   position: relative;
   background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.08), transparent 40%);
+  overflow: hidden;
 }
 
 .topbar {
   height: 64px;
+  flex-shrink: 0;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -363,23 +365,33 @@ body {
 .view-panel {
   display: none;
   flex: 1;
-  overflow-y: auto;
+  min-height: 0;
   position: relative;
 }
 
 .view-panel.active {
   display: flex;
   flex-direction: column;
+  height: calc(100vh - 64px);
+}
+
+#chatView {
+  overflow: hidden;
+}
+
+#langdockView, #apiDocsView {
+  overflow-y: auto;
 }
 
 /* Chat Container */
 .chat-container {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 24px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   max-width: 900px;
   width: 100%;
   margin: 0 auto;
@@ -475,8 +487,10 @@ body {
 }
 
 .message.assistant .message-avatar {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
   color: white;
+  box-shadow: 0 0 12px rgba(236, 72, 153, 0.4);
+  font-weight: 800;
 }
 
 .message-content {
@@ -488,8 +502,8 @@ body {
 
 .message-sender {
   font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-dim);
+  font-weight: 700;
+  color: #c084fc;
 }
 
 .message-body {
@@ -578,13 +592,16 @@ body {
 
 /* Input Panel */
 .input-panel {
+  flex-shrink: 0;
   padding: 16px 24px 20px;
-  background: rgba(11, 15, 25, 0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(11, 15, 25, 0.95);
+  backdrop-filter: blur(16px);
   border-top: 1px solid var(--border-color);
   max-width: 900px;
   width: 100%;
   margin: 0 auto;
+  position: relative;
+  z-index: 10;
 }
 
 .chat-form {

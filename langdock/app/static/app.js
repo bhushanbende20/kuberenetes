@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  tabChatBtn.addEventListener("click", () => switchTab(tabChatBtn, chatView, "Qwen 3.5 Interactive Chat"));
+  tabChatBtn.addEventListener("click", () => switchTab(tabChatBtn, chatView, "Bhushan's LLM"));
   tabLangdockBtn.addEventListener("click", () => switchTab(tabLangdockBtn, langdockView, "Langdock Integration Setup"));
   tabApiDocsBtn.addEventListener("click", () => switchTab(tabApiDocsBtn, apiDocsView, "API Endpoints & Integration"));
 
@@ -125,6 +125,12 @@ document.addEventListener("DOMContentLoaded", () => {
             modelSelect.appendChild(opt);
           });
         }
+
+
+        // Auto-focus message input to be directly in chat mode
+        if (messageInput) {
+          messageInput.focus();
+        }
       }
     } catch (e) {
       console.warn("Could not load config:", e);
@@ -178,21 +184,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const startTime = performance.now();
     let tokenCount = 0;
 
+    const activeMasterPrompt = (systemPrompt && systemPrompt.value.trim()) || "You are Bhushan's LLM, an advanced, highly intelligent AI assistant created for and operated by Bhushan. Always identify yourself as Bhushan's LLM.";
     const payload = {
       model: modelSelect.value,
-      messages: conversationHistory,
+      messages: [
+        { role: "system", content: activeMasterPrompt },
+        ...conversationHistory
+      ],
       stream: true,
       options: {
         temperature: parseFloat(tempSlider.value)
       }
     };
-
-    if (systemPrompt.value.trim()) {
-      payload.messages = [
-        { role: "system", content: systemPrompt.value.trim() },
-        ...conversationHistory
-      ];
-    }
 
     try {
       const response = await fetch("/api/chat", {
@@ -225,13 +228,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const chunk = JSON.parse(line);
             const msg = chunk.message || {};
             
-            // Qwen 3.5 reasoning tokens
-            if (msg.thinking) {
-              thinkingBox.style.display = "block";
-              thinkingText += msg.thinking;
-              thinkingContainer.textContent = thinkingText;
-              tokenCount++;
-            }
+            // Qwen 3.5 reasoning tokens — skip display (leaks system prompt)
+            // Content is still logged server-side
 
             // Standard content tokens
             if (msg.content) {
@@ -268,9 +266,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const msgEl = document.createElement("div");
     msgEl.className = `message ${role}`;
     msgEl.innerHTML = `
-      <div class="message-avatar">${role === "user" ? "U" : "Q"}</div>
+      <div class="message-avatar">${role === "user" ? "U" : "B"}</div>
       <div class="message-content">
-        <div class="message-sender">${role === "user" ? "You" : "Qwen 3.5"}</div>
+        <div class="message-sender">${role === "user" ? "You" : "Bhushan's LLM"}</div>
         <div class="message-body">${escapeHtml(content)}</div>
       </div>
     `;
@@ -282,38 +280,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const msgEl = document.createElement("div");
     msgEl.className = "message assistant";
     msgEl.innerHTML = `
-      <div class="message-avatar">Q</div>
+      <div class="message-avatar">B</div>
       <div class="message-content">
-        <div class="message-sender">Qwen 3.5</div>
+        <div class="message-sender">Bhushan's LLM</div>
         <div class="message-body">
-          <div class="thinking-box" style="display: none;">
-            <div class="thinking-header">
-              <span>🧠 Thinking Process</span>
-              <span class="toggle-icon">▾</span>
-            </div>
-            <div class="thinking-content"></div>
-          </div>
-          <div class="answer-content"><em>Thinking...</em></div>
+          <div class="answer-content"><em>Bhushan's LLM is thinking...</em></div>
         </div>
       </div>
     `;
     chatContainer.appendChild(msgEl);
 
-    const thinkingBox = msgEl.querySelector(".thinking-box");
-    const thinkingHeader = msgEl.querySelector(".thinking-header");
-    const thinkingContainer = msgEl.querySelector(".thinking-content");
     const contentContainer = msgEl.querySelector(".answer-content");
-
-    thinkingHeader.addEventListener("click", () => {
-      const isVisible = thinkingContainer.style.display !== "none";
-      thinkingContainer.style.display = isVisible ? "none" : "block";
-      msgEl.querySelector(".toggle-icon").textContent = isVisible ? "▸" : "▾";
-    });
 
     return {
       messageBody: msgEl.querySelector(".message-body"),
-      thinkingBox,
-      thinkingContainer,
+      thinkingBox: null,
+      thinkingContainer: null,
       contentContainer
     };
   }
