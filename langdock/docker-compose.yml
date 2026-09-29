@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  langdock-ollama-bridge:
+    build: .
+    container_name: langdock-ollama-bridge
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - DEFAULT_MODEL=qwen3.5:4b
+      - LANGDOCK_API_KEY=langdock-ollama-secret
+      - REQUIRE_AUTH=false
+    extra_hosts:
+      # Allows container to reach host Ollama on localhost:11434
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

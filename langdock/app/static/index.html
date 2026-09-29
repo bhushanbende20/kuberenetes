@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Langdock Ollama Qwen Portal</title>
+  <meta name="description" content="Production-ready bridge and interactive chat connecting Langdock with local Ollama Qwen models.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h2>Langdock <span class="badge-accent">Bridge</span></h2>
+          <span class="sub-text">Ollama &bull; Qwen 3.5</span>
+        </div>
+      </div>
+
+      <!-- Connection Status Card -->
+      <div class="status-card" id="statusCard">
+        <div class="status-indicator">
+          <span class="pulse-dot" id="healthDot"></span>
+          <span class="status-label" id="healthStatus">Connecting...</span>
+        </div>
+        <div class="status-details">
+          <span class="status-meta" id="ollamaHost">http://localhost:11434</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-menu">
+        <button class="nav-item active" id="tabChatBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Interactive Chat</span>
+        </button>
+        <button class="nav-item" id="tabLangdockBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Langdock Setup</span>
+        </button>
+        <button class="nav-item" id="tabApiDocsBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span>Endpoints & cURL</span>
+        </button>
+      </nav>
+
+      <!-- Model & Param Controls -->
+      <div class="sidebar-section">
+        <label class="control-label" for="modelSelect">Active Model</label>
+        <select class="custom-select" id="modelSelect">
+          <option value="qwen3.5:4b" selected>qwen3.5:4b (Default)</option>
+        </select>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="slider-header">
+          <label class="control-label" for="tempSlider">Temperature</label>
+          <span class="slider-value" id="tempValue">0.7</span>
+        </div>
+        <input type="range" min="0" max="1" step="0.05" value="0.7" class="custom-slider" id="tempSlider">
+      </div>
+
+      <div class="sidebar-section">
+        <label class="control-label" for="systemPrompt">System Persona</label>
+        <textarea class="custom-textarea" id="systemPrompt" rows="3" placeholder="You are a helpful, precise AI assistant powered by Qwen."></textarea>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-secondary btn-full" id="clearChatBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Clear Chat</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="topbar-title">
+            <h1 id="pageTitle">Qwen 3.5 Interactive Chat</h1>
+            <span class="topbar-meta">Bridge streaming directly from <code>http://localhost:11434/api/chat</code></span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span class="badge badge-success" id="connectionBadge">Ollama Connected</span>
+        </div>
+      </header>
+
+      <!-- View 1: Chat Container -->
+      <section class="view-panel active" id="chatView">
+        <div class="chat-container" id="chatContainer">
+          <!-- Welcome Message -->
+          <div class="welcome-card" id="welcomeCard">
+            <div class="welcome-icon">⚡</div>
+            <h3>Ready to interact with Qwen 3.5</h3>
+            <p>This application routes requests to your local Ollama instance at <code>http://localhost:11434/api/chat</code> with full support for reasoning traces and real-time streaming.</p>
+            <div class="quick-prompts">
+              <button class="quick-prompt-btn" data-prompt="What are the key architectural benefits of running Apache Flink on Kubernetes using the Operator?">Architecture of Flink on K8s</button>
+              <button class="quick-prompt-btn" data-prompt="Write a Python script that streams responses from Ollama API chat endpoint.">Python Ollama streaming script</button>
+              <button class="quick-prompt-btn" data-prompt="Explain how Langdock integrates with custom local models via OpenAI compatible endpoints.">Langdock custom model setup</button>
+            </div>
+          </div>
+          <!-- Chat messages dynamically rendered here -->
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="input-panel">
+          <form class="chat-form" id="chatForm">
+            <div class="input-wrapper">
+              <textarea 
+                id="messageInput" 
+                class="chat-input" 
+                placeholder="Ask Qwen anything... (Shift+Enter for newline, Enter to send)" 
+                rows="1"
+                autofocus
+              ></textarea>
+              <button type="submit" class="send-btn" id="sendBtn" title="Send message">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </form>
+          <div class="input-meta">
+            <span>Powered by <strong>Qwen 3.5 (Ollama)</strong> &bull; Endpoint: <code>/api/chat</code></span>
+            <span id="speedMetric"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 2: Langdock Integration Setup & Test -->
+      <section class="view-panel" id="langdockView">
+        <div class="config-view-container">
+          <div class="card-hero">
+            <h2>Connect Langdock to this Local Qwen Instance</h2>
+            <p>Langdock connects to custom models using an OpenAI-compatible REST API. This application provides the exact <code>POST /chat/completions</code> endpoint Langdock requires.</p>
+          </div>
+
+          <div class="grid-2col">
+            <!-- Step by step instructions -->
+            <div class="card config-card">
+              <h3>1. Langdock Workspace Settings</h3>
+              <ol class="step-list">
+                <li>Log in to your <strong>Langdock</strong> workspace.</li>
+                <li>Go to <strong>Settings</strong> &rarr; <strong>Models</strong> (or <strong>Custom Models / BYOK</strong>).</li>
+                <li>Click <strong>"Add Custom Model"</strong> or <strong>"Add Provider (OpenAI Compatible)"</strong>.</li>
+                <li>Fill in the parameters shown on the right panel.</li>
+                <li>Save and select <strong>qwen3.5:4b</strong> in any Langdock Chat or Agent!</li>
+              </ol>
+
+              <div class="info-callout">
+                <strong>💡 Tip for Remote/Cloud Langdock:</strong> If Langdock runs in the cloud (app.langdock.com), expose your local port with a tunnel like <code>ngrok http 8000</code> or deploy to your Kubernetes cluster and use an Ingress URL.
+              </div>
+            </div>
+
+            <!-- Copyable parameters -->
+            <div class="card config-card">
+              <h3>2. Connection Parameters</h3>
+              <div class="copy-field">
+                <label>Provider Type</label>
+                <div class="copy-input-row">
+                  <input type="text" value="OpenAI Compatible" readonly>
+                </div>
+              </div>
+
+              <div class="copy-field">
+                <label>Base URL / Endpoint</label>
+                <div class="copy-input-row">
+                  <input type="text" id="langdockBaseUrl" value="http://localhost:8000" readonly>
+                  <button class="btn btn-copy" onclick="copyValue('langdockBaseUrl')">Copy</button>
+                </div>
+              </div>
+
+              <div class="copy-field">
+                <label>Model ID</label>
+                <div class="copy-input-row">
+                  <input type="text" id="langdockModelId" value="qwen3.5:4b" readonly>
+                  <button class="btn btn-copy" onclick="copyValue('langdockModelId')">Copy</button>
+                </div>
+              </div>
+
+              <div class="copy-field">
+                <label>API Key / Bearer Token</label>
+                <div class="copy-input-row">
+                  <input type="text" id="langdockApiKey" value="langdock-ollama-secret" readonly>
+                  <button class="btn btn-copy" onclick="copyValue('langdockApiKey')">Copy</button>
+                </div>
+              </div>
+
+              <div class="simulator-box">
+                <button class="btn btn-primary btn-full" id="testHandshakeBtn">
+                  ⚡ Test Langdock Custom Model Handshake
+                </button>
+                <div class="test-result-box" id="testResultBox" style="display: none;">
+                  <div class="test-result-header">
+                    <span id="testResultBadge" class="badge">Running...</span>
+                    <span id="testResultLatency"></span>
+                  </div>
+                  <pre id="testResultOutput"></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 3: API Docs & cURL Examples -->
+      <section class="view-panel" id="apiDocsView">
+        <div class="config-view-container">
+          <div class="card">
+            <h2>Available API Endpoints</h2>
+            <p>You can query this bridge service using any standard client (Python, cURL, Langdock, LangChain, or Node.js).</p>
+            
+            <div class="endpoint-block">
+              <div class="endpoint-header">
+                <span class="badge-post">POST</span>
+                <code>/chat/completions</code>
+                <span class="endpoint-desc">Langdock & OpenAI standard endpoint (Supports SSE streaming)</span>
+              </div>
+              <pre class="code-preview">curl -N http://localhost:8000/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen3.5:4b",
+    "messages": [{"role": "user", "content": "Explain Kubernetes in one sentence"}],
+    "stream": true
+  }'</pre>
+            </div>
+
+            <div class="endpoint-block">
+              <div class="endpoint-header">
+                <span class="badge-post">POST</span>
+                <code>/api/chat</code>
+                <span class="endpoint-desc">Direct Ollama Native Proxy</span>
+              </div>
+              <pre class="code-preview">curl -N http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen3.5:4b",
+    "messages": [{"role": "user", "content": "Hello Qwen!"}],
+    "stream": true
+  }'</pre>
+            </div>
+
+            <div class="endpoint-block">
+              <div class="endpoint-header">
+                <span class="badge-get">GET</span>
+                <code>/health</code>
+                <span class="endpoint-desc">Health Check & Model Discovery</span>
+              </div>
+              <pre class="code-preview">curl http://localhost:8000/health</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

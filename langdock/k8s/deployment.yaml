@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langdock-ollama-bridge
+  namespace: default
+  labels:
+    app: langdock-ollama-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: langdock-ollama-bridge
+  template:
+    metadata:
+      labels:
+        app: langdock-ollama-bridge
+    spec:
+      containers:
+        - name: bridge
+          image: langdock-ollama-bridge:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "8000"
+            - name: OLLAMA_BASE_URL
+              value: "http://host.minikube.internal:11434" # Or cluster internal Ollama service URL
+            - name: DEFAULT_MODEL
+              value: "qwen3.5:4b"
+            - name: REQUIRE_AUTH
+              value: "false"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: langdock-ollama-bridge-service
+  namespace: default
+  labels:
+    app: langdock-ollama-bridge
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app: langdock-ollama-bridge
